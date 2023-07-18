@@ -278,7 +278,7 @@ func useGoVersion(version string) {
 	// Update the Go version in the ~/.bashrc file
 	updateGoVersionInBashrc(version)
 
-	fmt.Printf("Using Go version %s.\n", version)
+	fmt.Printf("Using Go version %s.\nPlease make sure to execute: source ~/.bashrc\n", version)
 }
 
 // updateGoVersionInBashrc updates the Go version in the ~/.bashrc file.
