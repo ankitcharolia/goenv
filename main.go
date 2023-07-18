@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -154,6 +155,8 @@ func extractTarGz(src io.Reader, dest string) error {
 	defer gzr.Close()
 
 	tr := tar.NewReader(gzr)
+
+	var baseDir string // To handle cases where the archive contains a single top-level directory
 	for {
 		header, err := tr.Next()
 		if err == io.EOF {
@@ -163,25 +166,35 @@ func extractTarGz(src io.Reader, dest string) error {
 			return err
 		}
 
-		path := filepath.Join(dest, header.Name)
+		// Skip if the header is nil or empty
+		if header == nil || header.Name == "" {
+			continue
+		}
 
-		if header.Typeflag == tar.TypeDir {
+		// Handle the case where the archive contains a single top-level directory
+		if baseDir == "" {
+			baseDir = filepath.Dir(header.Name)
+		}
+
+		// Extract the files and directories to the correct location
+		path := filepath.Join(dest, strings.TrimPrefix(header.Name, baseDir))
+		switch header.Typeflag {
+		case tar.TypeDir:
 			err = os.MkdirAll(path, os.ModePerm)
 			if err != nil {
 				return err
 			}
-			continue
-		}
+		case tar.TypeReg:
+			file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
+			if err != nil {
+				return err
+			}
+			defer file.Close()
 
-		file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-
-		_, err = io.Copy(file, tr)
-		if err != nil {
-			return err
+			_, err = io.Copy(file, tr)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -191,6 +204,7 @@ func extractTarGz(src io.Reader, dest string) error {
 // listInstalledVersions lists all installed Golang versions.
 func listInstalledVersions() []string {
 	installPath := filepath.Join(os.Getenv("HOME"), ".go")
+	activeVersion := getCurrentGoVersion()
 	fileInfos, err := os.ReadDir(installPath)
 	if err != nil {
 		log.Fatalf("Failed to read directory: %v", err)
@@ -199,11 +213,30 @@ func listInstalledVersions() []string {
 	versions := []string{}
 	for _, fileInfo := range fileInfos {
 		if fileInfo.IsDir() {
-			versions = append(versions, fileInfo.Name())
+			version := fileInfo.Name()
+			if version == activeVersion {
+				version = "* " + version + "  (Currently active GOLANG version)" // Mark the active version with an asterisk
+			} else {
+				version = "  " + version
+			}
+			versions = append(versions, version)
 		}
 	}
 
 	return versions
+}
+
+// getCurrentGoVersion returns the actively used Go version by running "go env GOROOT" command.
+func getCurrentGoVersion() string {
+	cmd := exec.Command("go", "env", "GOROOT")
+	output, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+
+	goRoot := strings.TrimSpace(string(output))
+	version := strings.TrimPrefix(goRoot, filepath.Join(os.Getenv("HOME"), ".go")+"/")
+	return version
 }
 
 // uninstallGoVersion uninstalls a specific Golang version.
@@ -232,7 +265,7 @@ func isInstalled(version string) bool {
 func useGoVersion(version string) {
 
 	// Get the installation path for the specified Go version
-	goPath := filepath.Join(os.Getenv("HOME"), ".go", version, "go")
+	goPath := filepath.Join(os.Getenv("HOME"), ".go", version)
 
 	// Update the environment variables to point to the specified Go version
 	os.Setenv("GOPATH", goPath)
@@ -271,10 +304,12 @@ func updateGoVersionInBashrc(version string) {
 	}
 
 	// Add the new "export PATH=$HOME/.go/<version>/go/bin:$PATH" line
-	placeholder := fmt.Sprintf("export PATH=$HOME/.go/%s/go/bin:$PATH", version)
+	placeholder := fmt.Sprintf("export PATH=$HOME/.go/%s/bin:$PATH", version)
 	newLines = append(newLines, placeholder)
 
+	// Join the lines and remove leading/trailing empty lines
 	newBashrcData := strings.Join(newLines, "\n")
+	newBashrcData = strings.Trim(newBashrcData, "\n") // Remove trailing empty line, if any
 
 	err = os.WriteFile(bashrcPath, []byte(newBashrcData), 0644)
 	if err != nil {
