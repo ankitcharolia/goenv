@@ -9,13 +9,15 @@ builds:
     binary: goenv-{{ .Os}}-{{ .Arch}}
     ldflags: -linkmode external -extldflags -static
     env:
-      - CGO_ENABLED=0 #  it tells the Go compiler to produce a statically linked binary without any dynamic library dependencies.
+      - CGO_ENABLED=1
     goos:
       - linux
       - darwin
     goarch:
       - amd64
       - arm64
+      - s390x
+      - ppc64le
     ignore:
       - goos: darwin
         goarch: s390x
