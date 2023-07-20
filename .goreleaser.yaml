@@ -12,17 +12,8 @@ builds:
       - CGO_ENABLED=1
     goos:
       - linux
-      - darwin
     goarch:
       - amd64
-      - arm64
-      - s390x
-      - ppc64le
-    ignore:
-      - goos: darwin
-        goarch: s390x
-      - goos: darwin
-        goarch: ppc64le
 
 checksum:
   name_template: 'goenv_checksums.txt'
