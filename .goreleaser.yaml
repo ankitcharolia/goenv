@@ -7,7 +7,7 @@ before:
 builds:
   - main: ./main.go
     binary: goenv
-    ldflags: -linkmode external -extldflags -static
+    ldflags: -linkmode external
     env:
       - CGO_ENABLED=1
     goos:
