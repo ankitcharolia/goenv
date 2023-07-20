@@ -19,7 +19,7 @@ archives:
   - id: goenv
     name_template: |-
       {{ .ProjectName }}-{{ .Os }}-{{ .Arch }}
-    format: binary
+#    format: binary
 
 checksum:
   name_template: 'goenv_checksums.txt'
