@@ -1,0 +1,48 @@
+project_name: argocd
+
+before:
+  hooks:
+    - go mod download
+    
+builds:
+  - main: ./main.go
+    binary: goenv-{{ .Os}}-{{ .Arch}}
+    ldflags: -linkmode external -extldflags -static
+    env:
+      - CGO_ENABLED=0 #  it tells the Go compiler to produce a statically linked binary without any dynamic library dependencies.
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: darwin
+        goarch: s390x
+      - goos: darwin
+        goarch: ppc64le
+
+checksum:
+  name_template: 'goenv_checksums.txt'
+  algorithm: sha256
+
+release:
+  prerelease: auto
+  draft: false
+  header: |
+    ## Quick Installation
+
+    **Download**: https://raw.githubusercontent.com/ankitcharolia/goenv//releases/tag/{{.Tag}}
+
+  footer: |
+    **Full Changelog**: https://github.com/ankitcharolia/goenv/compare/{{ .PreviousTag }}...{{ .Tag }}
+    
+
+changelog:
+  use:
+    github
+  sort: asc
+  abbrev: 0
+  filters:
+    exclude:
+      - '^*.json:'
