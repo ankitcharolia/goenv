@@ -1,4 +1,4 @@
-project_name: argocd
+project_name: goenv
 
 before:
   hooks:
@@ -6,7 +6,7 @@ before:
     
 builds:
   - main: ./main.go
-    binary: goenv-{{ .Os}}-{{ .Arch}}
+    binary: goenv
     ldflags: -linkmode external -extldflags -static
     env:
       - CGO_ENABLED=1
@@ -14,6 +14,12 @@ builds:
       - linux
     goarch:
       - amd64
+
+archives:
+  - id: goenv
+    name_template: |-
+      {{ .ProjectName }}-{{ .Os }}-{{ .Arch }}
+    format: binary
 
 checksum:
   name_template: 'goenv_checksums.txt'
@@ -25,7 +31,7 @@ release:
   header: |
     ## Quick Installation
 
-    **Download**: https://raw.githubusercontent.com/ankitcharolia/goenv//releases/tag/{{.Tag}}
+    **Download**: https://github.com/ankitcharolia/goenv/releases/tag/{{.Tag}}
 
   footer: |
     **Full Changelog**: https://github.com/ankitcharolia/goenv/compare/{{ .PreviousTag }}...{{ .Tag }}
@@ -36,6 +42,21 @@ changelog:
     github
   sort: asc
   abbrev: 0
+  groups: # Regex use RE2 syntax as defined here: https://github.com/google/re2/wiki/Syntax.
+    - title: 'Features'
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 100
+    - title: 'Bug fixes'
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 200
+    - title: 'Documentation'
+      regexp: '^.*?docs(\([[:word:]]+\))??!?:.+$'
+      order: 300
+    - title: 'Dependency updates'
+      regexp: '^.*?(feat|fix|chore)\(deps?.+\)!?:.+$'
+      order: 400
+    - title: 'Other work'
+      order: 999
   filters:
     exclude:
       - '^*.json:'
