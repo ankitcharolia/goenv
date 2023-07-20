@@ -1,4 +1,4 @@
-module goenv
+module github.com/ankitcharolia/goenv
 
 go 1.20
 
