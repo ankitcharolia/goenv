@@ -10,7 +10,7 @@ builds:
     ldflags:
       - -extldflags="-static"
     env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=0 #  it tells the Go compiler to produce a statically linked binary without any dynamic library dependencies
     goos:
       - linux
       - darwin
