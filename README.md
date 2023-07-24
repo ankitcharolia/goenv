@@ -2,6 +2,8 @@
 ![Build CI](https://github.com/ankitcharolia/goenv/actions/workflows/build-publish.yaml/badge.svg)
 ![CodeQL](https://github.com/ankitcharolia/goenv/actions/workflows/codeql-analysis.yaml/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ankitcharolia/goenv)](https://goreportcard.com/report/github.com/ankitcharolia/goenv)
+[![License](https://img.shields.io/badge/License-MIT%20-blue.svg)](https://github.com/ankitcharolia/goenv/blob/master/LICENSE)
+[![Releases](https://img.shields.io/github/downloads/ankitcharolia/goenv/total.svg)](https://github.com/ankitcharolia/goenv/releases)
 
 # goenv (Golang Version Manager)
 goenv is a command-line tool to manage multiple versions of Golang on your system.
