@@ -3,13 +3,18 @@
 ![CodeQL](https://github.com/ankitcharolia/goenv/actions/workflows/codeql-analysis.yaml/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ankitcharolia/goenv)](https://goreportcard.com/report/github.com/ankitcharolia/goenv)
 [![License](https://img.shields.io/badge/License-MIT%20-blue.svg)](https://github.com/ankitcharolia/goenv/blob/master/LICENSE)
-[![Releases](https://img.shields.io/github/downloads/ankitcharolia/goenv/total.svg)](https://github.com/ankitcharolia/goenv/releases)
+[![Releases](https://img.shields.io/github/downloads/ankitcharolia/goenv/total.svg)]()
 
 # goenv (Golang Version Manager)
 goenv is a command-line tool to manage multiple versions of Golang on your system.
 
 ## Installation
 **Download**: https://github.com/ankitcharolia/goenv/releases
+```shell
+wget -O - https://github.com/ankitcharolia/goenv/releases/download/<VERSION>/goenv-linux-amd64.tar.gz | tar -xz -C ~/.go
+export PATH=$HOME/.go:$PATH >> ~/.bashrc
+source ~/.bashrc
+```
 
 ## Usage
 goenv provides several commands to manage Golang versions on your system.
@@ -23,6 +28,20 @@ Flags:
   --list-remote   List all remote versions of GOLANG
   --uninstall     Uninstall a specific version of GOLANG
   --use           Use a specific version of GOLANG
+```
+
+### List all remote versions of GOLANG
+```shell
+$ goenv --list-remote
+1.21rc3
+1.21rc2
+1.20.6
+1.20.5
+1.20.4
+1.20.3
+1.20.2
+1.20.1
+...
 ```
 
 ### Install a specific version of GOLANG
