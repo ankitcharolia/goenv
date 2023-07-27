@@ -78,6 +78,7 @@ func main() {
 		installGoVersion(*installVersion)
 	} else if *useVersion != "" {
 		useGoVersion(*useVersion)
+		return
 	} else if *help {
 		flag.Usage()
 	} else {
@@ -254,6 +255,7 @@ func uninstallGoVersion(version string) {
 func isInstalled(version string) bool {
 	versions := listInstalledVersions()
 	for _, v := range versions {
+		v = strings.TrimSpace(strings.TrimPrefix(v, "* "))
 		if v == version {
 			return true
 		}
@@ -263,6 +265,12 @@ func isInstalled(version string) bool {
 
 // useGoVersion sets the specified Go version as the active version to use.
 func useGoVersion(version string) {
+
+	// Check if the specified Go version is installed
+	if !isInstalled(version) {
+		fmt.Printf("Go version %s is not installed. Please install it first.\n", version)
+		return
+	}
 
 	// Get the installation path for the specified Go version
 	goPath := filepath.Join(os.Getenv("HOME"), ".go", version)
@@ -278,7 +286,13 @@ func useGoVersion(version string) {
 	// Update the Go version in the ~/.bashrc file
 	updateGoVersionInBashrc(version)
 
-	fmt.Printf("Using Go version %s.\nPlease make sure to execute: source ~/.bashrc\n", version)
+	// ANSI escape code for red color
+	redColor := "\033[31m"
+	// ANSI escape code to reset color to default
+	resetColor := "\033[0m"
+
+	message := fmt.Sprintf("Using Go version %s.%s\nPlease make sure to execute: source ~/.bashrc\n%s", version, redColor, resetColor)
+	fmt.Print(message)
 }
 
 // updateGoVersionInBashrc updates the Go version in the ~/.bashrc file.
