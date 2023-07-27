@@ -69,5 +69,9 @@ Installed Golang versions:
   1.20.4
 ```
 
-## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+## Supported Shell
+* Bash
+* Zsh (WIP)
+
+## Support
+Feel free to create an Issue/Pull Request if you find any bug with `goenv`
