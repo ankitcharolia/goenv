@@ -54,6 +54,7 @@ func main() {
 		versions := listInstalledVersions()
 		if len(versions) == 0 {
 			fmt.Println("No installed Golang versions found.")
+			return
 		} else {
 			fmt.Println("Installed Golang versions:")
 			for _, version := range versions {
@@ -205,6 +206,21 @@ func extractTarGz(src io.Reader, dest string) error {
 // listInstalledVersions lists all installed Golang versions.
 func listInstalledVersions() []string {
 	installPath := filepath.Join(os.Getenv("HOME"), ".go")
+
+	// Check if the .go directory exists
+	_, err := os.Stat(installPath)
+	if err != nil {
+		// If the .go directory doesn't exist, create it and return an empty list
+		if os.IsNotExist(err) {
+			err = os.Mkdir(installPath, os.ModePerm)
+			if err != nil {
+				log.Fatalf("Failed to create .go directory: %v", err)
+			}
+			return []string{} // Return an empty list to indicate no Golang versions are installed
+		}
+		log.Fatalf("Failed to read directory: %v", err)
+	}
+
 	activeVersion := getCurrentGoVersion()
 	fileInfos, err := os.ReadDir(installPath)
 	if err != nil {
