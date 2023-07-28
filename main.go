@@ -54,6 +54,7 @@ func main() {
 		versions := listInstalledVersions()
 		if len(versions) == 0 {
 			fmt.Println("No installed Golang versions found.")
+			return
 		} else {
 			fmt.Println("Installed Golang versions:")
 			for _, version := range versions {
@@ -64,10 +65,6 @@ func main() {
 	}
 
 	if *uninstallVersion != "" {
-		if !isInstalled(*uninstallVersion) {
-			fmt.Printf("Go version %s is not installed.\n", *uninstallVersion)
-			return
-		}
 		uninstallGoVersion(*uninstallVersion)
 		return
 	}
@@ -78,6 +75,7 @@ func main() {
 		installGoVersion(*installVersion)
 	} else if *useVersion != "" {
 		useGoVersion(*useVersion)
+		return
 	} else if *help {
 		flag.Usage()
 	} else {
@@ -204,6 +202,21 @@ func extractTarGz(src io.Reader, dest string) error {
 // listInstalledVersions lists all installed Golang versions.
 func listInstalledVersions() []string {
 	installPath := filepath.Join(os.Getenv("HOME"), ".go")
+
+	// Check if the .go directory exists
+	_, err := os.Stat(installPath)
+	if err != nil {
+		// If the .go directory doesn't exist, create it and return an empty list
+		if os.IsNotExist(err) {
+			err = os.Mkdir(installPath, os.ModePerm)
+			if err != nil {
+				log.Fatalf("Failed to create .go directory: %v", err)
+			}
+			return []string{} // Return an empty list to indicate no Golang versions are installed
+		}
+		log.Fatalf("Failed to read directory: %v", err)
+	}
+
 	activeVersion := getCurrentGoVersion()
 	fileInfos, err := os.ReadDir(installPath)
 	if err != nil {
@@ -241,19 +254,43 @@ func getCurrentGoVersion() string {
 
 // uninstallGoVersion uninstalls a specific Golang version.
 func uninstallGoVersion(version string) {
-	installPath := filepath.Join(os.Getenv("HOME"), ".go", version)
-	err := os.RemoveAll(installPath)
-	if err != nil {
-		log.Fatalf("Failed to uninstall Go version: %v", err)
-	}
+	if isInstalled(version) {
+		if version == getCurrentGoVersion() {
+			// If the version to be uninstalled is the currently active version,
+			// switch to another installed version before uninstalling it.
+			versions := listInstalledVersions()
+			for _, v := range versions {
+				v = strings.TrimSpace(strings.TrimPrefix(v, "* "))
+				if v != version {
+					useGoVersion(v)
+					break
+				}
+			}
+			fmt.Printf("Switched to Go version %s (currently active) before uninstalling.\n", version)
+		}
 
-	fmt.Printf("Go version %s has been uninstalled.\n", version)
+		installPath := filepath.Join(os.Getenv("HOME"), ".go", version)
+		err := os.RemoveAll(installPath)
+		if err != nil {
+			log.Fatalf("Failed to uninstall Go version: %v", err)
+		}
+
+		fmt.Printf("Go version %s has been uninstalled.\n", version)
+	} else {
+		if version == getCurrentGoVersion() {
+			fmt.Printf("Cannot uninstall Go version %s because it is currently active.\n", version)
+			fmt.Printf("To uninstall, please switch to another installed version first.\n")
+		} else {
+			fmt.Printf("Go version %s is not installed. Please install it first.\n", version)
+		}
+	}
 }
 
 // isInstalled checks if a specific Golang version is already installed.
 func isInstalled(version string) bool {
 	versions := listInstalledVersions()
 	for _, v := range versions {
+		v = strings.TrimSpace(strings.TrimPrefix(v, "* "))
 		if v == version {
 			return true
 		}
@@ -263,6 +300,12 @@ func isInstalled(version string) bool {
 
 // useGoVersion sets the specified Go version as the active version to use.
 func useGoVersion(version string) {
+
+	// Check if the specified Go version is installed
+	if !isInstalled(version) {
+		fmt.Printf("Go version %s is not installed. Please install it first.\n", version)
+		return
+	}
 
 	// Get the installation path for the specified Go version
 	goPath := filepath.Join(os.Getenv("HOME"), ".go", version)
@@ -278,7 +321,13 @@ func useGoVersion(version string) {
 	// Update the Go version in the ~/.bashrc file
 	updateGoVersionInBashrc(version)
 
-	fmt.Printf("Using Go version %s.\nPlease make sure to execute: source ~/.bashrc\n", version)
+	// ANSI escape code for red color
+	redColor := "\033[31m"
+	// ANSI escape code to reset color to default
+	resetColor := "\033[0m"
+
+	message := fmt.Sprintf("Using Go version %s.%s\nPlease make sure to execute: source ~/.bashrc\n%s", version, redColor, resetColor)
+	fmt.Print(message)
 }
 
 // updateGoVersionInBashrc updates the Go version in the ~/.bashrc file.
