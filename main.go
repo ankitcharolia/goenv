@@ -283,7 +283,6 @@ func uninstallGoVersion(version string) {
 		} else {
 			fmt.Printf("Go version %s is not installed. Please install it first.\n", version)
 		}
-
 	}
 }
 
