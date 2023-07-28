@@ -65,10 +65,6 @@ func main() {
 	}
 
 	if *uninstallVersion != "" {
-		if !isInstalled(*uninstallVersion) {
-			fmt.Printf("Go version %s is not installed.\n", *uninstallVersion)
-			return
-		}
 		uninstallGoVersion(*uninstallVersion)
 		return
 	}
@@ -258,13 +254,37 @@ func getCurrentGoVersion() string {
 
 // uninstallGoVersion uninstalls a specific Golang version.
 func uninstallGoVersion(version string) {
-	installPath := filepath.Join(os.Getenv("HOME"), ".go", version)
-	err := os.RemoveAll(installPath)
-	if err != nil {
-		log.Fatalf("Failed to uninstall Go version: %v", err)
-	}
+	if isInstalled(version) {
+		if version == getCurrentGoVersion() {
+			// If the version to be uninstalled is the currently active version,
+			// switch to another installed version before uninstalling it.
+			versions := listInstalledVersions()
+			for _, v := range versions {
+				v = strings.TrimSpace(strings.TrimPrefix(v, "* "))
+				if v != version {
+					useGoVersion(v)
+					break
+				}
+			}
+			fmt.Printf("Switched to Go version %s (currently active) before uninstalling.\n", version)
+		}
 
-	fmt.Printf("Go version %s has been uninstalled.\n", version)
+		installPath := filepath.Join(os.Getenv("HOME"), ".go", version)
+		err := os.RemoveAll(installPath)
+		if err != nil {
+			log.Fatalf("Failed to uninstall Go version: %v", err)
+		}
+
+		fmt.Printf("Go version %s has been uninstalled.\n", version)
+	} else {
+		if version == getCurrentGoVersion() {
+			fmt.Printf("Cannot uninstall Go version %s because it is currently active.\n", version)
+			fmt.Printf("To uninstall, please switch to another installed version first.\n")
+		} else {
+			fmt.Printf("Go version %s is not installed. Please install it first.\n", version)
+		}
+
+	}
 }
 
 // isInstalled checks if a specific Golang version is already installed.
