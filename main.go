@@ -291,7 +291,7 @@ func isInstalled(version string) bool {
 	versions := listInstalledVersions()
 	for _, v := range versions {
 		v = strings.TrimSpace(strings.TrimPrefix(v, "* "))
-		if v == version {
+		if v == version || v == "* "+version {
 			return true
 		}
 	}
@@ -301,10 +301,18 @@ func isInstalled(version string) bool {
 // useGoVersion sets the specified Go version as the active version to use.
 func useGoVersion(version string) {
 
-	// Check if the specified Go version is installed
-	if !isInstalled(version) {
-		fmt.Printf("Go version %s is not installed. Please install it first.\n", version)
+	// Get the currently active Go version
+	activeVersion := getCurrentGoVersion()
+	// Check if the specified version is the same as the currently active version
+	if version == activeVersion {
+		fmt.Printf("Go version %s is already the active version.\n", version)
 		return
+	} else {
+		// Check if the specified Go version is installed
+		if !isInstalled(version) {
+			fmt.Printf("Go version %s is not installed. Please install it first.\n", version)
+			return
+		}
 	}
 
 	// Get the installation path for the specified Go version
@@ -318,8 +326,13 @@ func useGoVersion(version string) {
 	newPath := fmt.Sprintf("%s%c$PATH", binPath, os.PathListSeparator)
 	os.Setenv("PATH", newPath)
 
-	// Update the Go version in the ~/.bashrc file
-	updateGoVersionInBashrc(version)
+	// Update the Go version in the appropriate shell configuration file
+	shell := getShell()
+	if shell == "bash" {
+		updateGoVersionInShellRC(version, ".bashrc")
+	} else if shell == "zsh" {
+		updateGoVersionInShellRC(version, ".zshrc")
+	}
 
 	// ANSI escape code for red color
 	redColor := "\033[31m"
@@ -330,21 +343,28 @@ func useGoVersion(version string) {
 	fmt.Print(message)
 }
 
-// updateGoVersionInBashrc updates the Go version in the ~/.bashrc file.
-func updateGoVersionInBashrc(version string) {
+// getShell returns the user's default shell
+func getShell() string {
+	shell := os.Getenv("SHELL")
+	shellParts := strings.Split(shell, "/")
+	return strings.TrimSpace(shellParts[len(shellParts)-1])
+}
+
+// updateGoVersionInShellRC updates the Go version in the specified shell RC file.
+func updateGoVersionInShellRC(version string, rcFile string) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatalf("Failed to get user's home directory: %v", err)
 	}
 
-	bashrcPath := filepath.Join(homeDir, ".bashrc")
-	bashrcData, err := os.ReadFile(bashrcPath)
+	rcFilePath := filepath.Join(homeDir, rcFile)
+	rcData, err := os.ReadFile(rcFilePath)
 	if err != nil {
-		log.Fatalf("Failed to read ~/.bashrc: %v", err)
+		log.Fatalf("Failed to read %s: %v", rcFilePath, err)
 	}
 
 	// Remove the old "export PATH=$HOME/.go" line
-	lines := strings.Split(string(bashrcData), "\n")
+	lines := strings.Split(string(rcData), "\n")
 	var newLines []string
 	for _, line := range lines {
 		if !strings.HasPrefix(line, "export PATH=$HOME/.go") {
@@ -357,11 +377,11 @@ func updateGoVersionInBashrc(version string) {
 	newLines = append(newLines, placeholder)
 
 	// Join the lines and remove leading/trailing empty lines
-	newBashrcData := strings.Join(newLines, "\n")
-	newBashrcData = strings.Trim(newBashrcData, "\n") // Remove trailing empty line, if any
+	newRCData := strings.Join(newLines, "\n")
+	newRCData = strings.Trim(newRCData, "\n") // Remove trailing empty line, if any
 
-	err = os.WriteFile(bashrcPath, []byte(newBashrcData), 0644)
+	err = os.WriteFile(rcFilePath, []byte(newRCData), 0644)
 	if err != nil {
-		log.Fatalf("Failed to write to ~/.bashrc: %v", err)
+		log.Fatalf("Failed to write to %s: %v", rcFilePath, err)
 	}
 }

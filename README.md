@@ -71,7 +71,7 @@ Installed Golang versions:
 
 ## Supported Shell
 * Bash
-* Zsh (WIP) [WORKAROUND: Add `export PATH=$HOME/.go/<Installed GO Version>/bin:$PATH` to `zshrc` file]
+* Zsh
 
 ## Support
 Feel free to create an Issue/Pull Request if you find any bug with `goenv`
