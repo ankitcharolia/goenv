@@ -11,7 +11,7 @@ goenv is a command-line tool to manage multiple versions of Golang on your syste
 ## Installation
 **Download**: https://github.com/ankitcharolia/goenv/releases
 ```shell
-wget -O - https://github.com/ankitcharolia/goenv/releases/download/<VERSION>/goenv-linux-amd64.tar.gz | tar -xz -C ~/.go
+wget -O - https://github.com/ankitcharolia/goenv/releases/latest/download/goenv-linux-amd64.tar.gz | tar -xz -C ~/.go
 export PATH=$HOME/.go:$PATH >> ~/.bashrc
 source ~/.bashrc
 ```
