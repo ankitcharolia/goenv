@@ -326,21 +326,22 @@ func useGoVersion(version string) {
 	newPath := fmt.Sprintf("%s%c$PATH", binPath, os.PathListSeparator)
 	os.Setenv("PATH", newPath)
 
-	// Update the Go version in the appropriate shell configuration file
-	shell := getShell()
-	if shell == "bash" {
-		updateGoVersionInShellRC(version, ".bashrc")
-	} else if shell == "zsh" {
-		updateGoVersionInShellRC(version, ".zshrc")
-	}
-
 	// ANSI escape code for red color
 	redColor := "\033[31m"
 	// ANSI escape code to reset color to default
 	resetColor := "\033[0m"
 
-	message := fmt.Sprintf("Using Go version %s.%s\nPlease make sure to execute: source ~/.bashrc\n%s", version, redColor, resetColor)
-	fmt.Print(message)
+	// Update the Go version in the appropriate shell configuration file
+	shell := getShell()
+	if shell == "bash" {
+		updateGoVersionInShellRC(version, ".bashrc")
+		message := fmt.Sprintf("Using Go version %s.%s\nPlease make sure to execute: source ~/.bashrc\n%s", version, redColor, resetColor)
+		fmt.Print(message)
+	} else if shell == "zsh" {
+		updateGoVersionInShellRC(version, ".zshrc")
+		message := fmt.Sprintf("Using Go version %s.%s\nPlease make sure to execute: source ~/.zshrc\n%s", version, redColor, resetColor)
+		fmt.Print(message)
+	}
 }
 
 // getShell returns the user's default shell
