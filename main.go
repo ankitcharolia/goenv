@@ -135,9 +135,8 @@ func installGoVersion(version string) {
 
 	// Extract the archive to the desired installation location
 	installPath := filepath.Join(os.Getenv("HOME"), ".go", version)
-	err = extractTarGz(reader, installPath)
-	if err != nil {
-		log.Fatalf("Failed to extract Go version: %v", err)
+	if err := extractAndCopy(reader, installPath); err != nil {
+		log.Fatalf("Failed to extract and copy: %v", err)
 	}
 
 	bar.Finish()
@@ -145,16 +144,16 @@ func installGoVersion(version string) {
 }
 
 // extractTarGz extracts the contents of a tar.gz archive to the specified directory.
-func extractTarGz(src io.Reader, dest string) error {
-	gzr, err := gzip.NewReader(src)
+func extractAndCopy(reader io.Reader, destination string) error {
+	gzr, err := gzip.NewReader(reader)
 	if err != nil {
 		return err
 	}
 	defer gzr.Close()
 
 	tr := tar.NewReader(gzr)
+	baseDir := ""
 
-	var baseDir string // To handle cases where the archive contains a single top-level directory
 	for {
 		header, err := tr.Next()
 		if err == io.EOF {
@@ -174,25 +173,32 @@ func extractTarGz(src io.Reader, dest string) error {
 			baseDir = filepath.Dir(header.Name)
 		}
 
-		// Extract the files and directories to the correct location
-		path := filepath.Join(dest, strings.TrimPrefix(header.Name, baseDir))
-		switch header.Typeflag {
-		case tar.TypeDir:
-			err = os.MkdirAll(path, os.ModePerm)
-			if err != nil {
-				return err
-			}
-		case tar.TypeReg:
-			file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
-			if err != nil {
-				return err
-			}
-			defer file.Close()
+		// Construct the destination path
+		destPath := filepath.Join(destination, strings.TrimPrefix(header.Name, baseDir))
 
-			_, err = io.Copy(file, tr)
-			if err != nil {
+		// Create directories if needed
+		if header.Typeflag == tar.TypeDir {
+			if err := os.MkdirAll(destPath, os.FileMode(header.Mode)); err != nil {
 				return err
 			}
+			continue
+		}
+
+		// Create the parent directory if needed
+		if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
+			return err
+		}
+
+		// Create and copy the file
+		file, err := os.OpenFile(destPath, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		_, err = io.Copy(file, tr)
+		if err != nil {
+			return err
 		}
 	}
 
