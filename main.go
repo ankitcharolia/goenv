@@ -143,7 +143,7 @@ func installGoVersion(version string) {
 	fmt.Printf("Go version %s is installed at %s.\n", version, installPath)
 }
 
-// extractTarGz extracts the contents of a tar.gz archive to the specified directory.
+// extractAndCopy extracts the contents of a tar.gz archive to the specified directory.
 func extractAndCopy(reader io.Reader, destination string) error {
 	gzr, err := gzip.NewReader(reader)
 	if err != nil {
