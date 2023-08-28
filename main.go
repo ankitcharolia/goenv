@@ -106,12 +106,16 @@ func listRemoteVersions() {
 
 func installGoVersion(version string) {
 	if isInstalled(version) {
-		fmt.Printf("Go version %s is already installed.\n", version)
+		greenColor := "\033[32m"
+		resetColor := "\033[0m"
+		fmt.Printf("%sGo version %s is already installed.%s\n", greenColor, version, resetColor)
 		return
 	}
 
 	// Install the specific Go version
-	fmt.Printf("Installing Go version %s...\n", version)
+	greenColor := "\033[32m"
+	resetColor := "\033[0m"
+	fmt.Printf("%sInstalling Go version %s...%s\n", greenColor, version, resetColor)
 
 	// Download the Go distribution archive
 	url := fmt.Sprintf("https://dl.google.com/go/go%s.%s-%s.tar.gz", version, runtime.GOOS, runtime.GOARCH)
@@ -140,7 +144,7 @@ func installGoVersion(version string) {
 	}
 
 	bar.Finish()
-	fmt.Printf("Go version %s is installed at %s.\n", version, installPath)
+	fmt.Printf("%sGo version %s is installed at %s.\nTo make this your default version, run 'goenv --use %s'%s\n", greenColor, version, installPath, version, resetColor)
 }
 
 // extractAndCopy extracts the contents of a tar.gz archive to the specified directory.
