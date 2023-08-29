@@ -105,11 +105,12 @@ func listRemoteVersions() {
 }
 
 func installGoVersion(version string) {
-	if isInstalled(version) {
+	activeVersion := getCurrentGoVersion()
+	if isInstalled(version) || version == activeVersion {
 		greenColor := "\033[32m"
 		resetColor := "\033[0m"
 		fmt.Printf("%sGo version %s is already installed.%s\n", greenColor, version, resetColor)
-		return
+		os.Exit(0)
 	}
 
 	// Install the specific Go version
