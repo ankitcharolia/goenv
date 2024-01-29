@@ -98,8 +98,9 @@ func listRemoteVersions() {
 		log.Fatalf("Failed to decode JSON response: %v", err)
 	}
 
-	for _, v := range versions {
-		version := strings.TrimPrefix(v.Version, "go")
+	// Print the versions in reverse order
+	for i := len(versions) - 1; i >= 0; i-- {
+		version := strings.TrimPrefix(versions[i].Version, "go")
 		fmt.Println(version)
 	}
 }
