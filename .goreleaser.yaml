@@ -65,6 +65,7 @@ changelog:
       order: 999
   filters:
     exclude:
+      - '^*.json:'
       - 'README'
       - Merge pull request
       - Merge branch
